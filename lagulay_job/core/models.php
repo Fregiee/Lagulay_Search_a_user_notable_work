@@ -3,6 +3,7 @@
 require_once 'dbConfig.php';
 
 function getAllUsers($pdo) {
+    
 	$sql = "SELECT * FROM search_users_data 
 			ORDER BY first_name ASC";
 	$stmt = $pdo->prepare($sql);
@@ -13,6 +14,7 @@ function getAllUsers($pdo) {
 }
 
 function getUserByID($pdo, $id) {
+
 	$sql = "SELECT * from search_users_data WHERE id = ?";
 	$stmt = $pdo->prepare($sql);
 	$executeQuery = $stmt->execute([$id]);
@@ -23,7 +25,6 @@ function getUserByID($pdo, $id) {
 }
 
 function searchForAUser($pdo, $searchQuery) {
-	
 	$sql = "SELECT * FROM search_users_data WHERE 
 			CONCAT(data_specialization,experience,first_name,last_name,email,gender,
 				nationality,date_added) 
@@ -33,15 +34,19 @@ function searchForAUser($pdo, $searchQuery) {
 	$executeQuery = $stmt->execute(["%".$searchQuery."%"]);
 	if ($executeQuery) {
 		return $stmt->fetchAll();
+        
 	}
+
 }
 
 
 
 function insertNewUser($pdo,$data_specialization, $experience, $first_name, $last_name, $email, 
 	$gender, $nationality) {
-
-	$sql = "INSERT INTO search_users_data 
+    $response = array();
+    $checkIfUserExists = checkIfUserExists($pdo, $first_name);
+    if (!$checkIfUserExists['result']) {
+        $sql = "INSERT INTO search_users_data 
 			(
                 data_specialization,
                 experience,
@@ -55,29 +60,47 @@ function insertNewUser($pdo,$data_specialization, $experience, $first_name, $las
 			";
 
 	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute([
+    if ($stmt->execute([
 		$data_specialization, $experience,
         $first_name, $last_name, $email, 
-		$gender,$nationality,
-	]);
+		$gender,$nationality,])){
+            $response = array(
+				"status" => "200",
+				"message" => "User successfully inserted!"
+			);
+		}
 
-	if ($executeQuery) {
-		return true;
+		else {
+			$response = array(
+				"status" => "400",
+				"message" => "An error occured with the query!"
+			);
+		}
 	}
 
+	else {
+		$response = array(
+			"status" => "400",
+			"message" => "User already exists!"
+		);
+	}
+
+	return $response;
+
+	
 }
 
 function editUser($pdo,$data_specialization, $experience, $first_name, $last_name, $email, $gender, 
 	 $nationality, $id) {
 
 	$sql = "UPDATE search_users_data
-				SET data_specialization, 
-                    experience,
+				SET data_specialization = ?, 
+                    experience = ?,
                     first_name = ?,
 					last_name = ?,
 					email = ?,
 					gender = ?,
-					nationality = ?,
+					nationality = ?
 				WHERE id = ? 
 			";
 
@@ -104,6 +127,35 @@ function deleteUser($pdo, $id) {
 }
 
 
+
+function checkIfUserExists($pdo, $first_name) {
+	$response = array();
+	$sql = "SELECT * FROM search_users_data WHERE first_name = ?";
+	$stmt = $pdo->prepare($sql);
+
+	if ($stmt->execute([$first_name])) {
+
+		$userInfoArray = $stmt->fetch();
+
+		if ($stmt->rowCount() > 0) {
+			$response = array(
+				"result"=> true,
+				"status" => "200",
+				"userInfoArray" => $userInfoArray
+			);
+		}
+
+		else {
+			$response = array(
+				"status" => "400",
+				"message"=> "User doesn't exist from the database"
+			);
+		}
+	}
+
+	return $response;
+
+}
 
 
 ?>

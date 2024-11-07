@@ -7,10 +7,17 @@ require_once 'models.php';
 if (isset($_POST['insertUserBtn'])) {
 	$insertUser = insertNewUser($pdo,$_POST['data_specialization'], $_POST['experience'],$_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['gender'], $_POST['nationality']);
 
-	if ($insertUser) {
-		$_SESSION['message'] = "Successfully inserted!";
-		header("Location: ../index.php");
-	}
+	if ($insertUser['status'] == '200') {
+        $_SESSION['message'] = $insertUser['message'];
+        $_SESSION['status'] = $insertUser['status'];
+        header("Location: ../index.php");
+    }
+
+    else {
+        $_SESSION['message'] = $insertUser['message'];
+        $_SESSION['status'] = $insertUser['status'];
+        header("Location: ../index.php");
+    }
 }
 
 
