@@ -24,10 +24,17 @@ if (isset($_POST['insertUserBtn'])) {
 if (isset($_POST['editUserBtn'])) {
 	$editUser = editUser($pdo,$_POST['data_specialization'], $_POST['experience'],$_POST['first_name'], $_POST['last_name'], $_POST['email'], $_POST['gender'], $_POST['nationality'], $_GET['id']);
 
-	if ($editUser) {
-		$_SESSION['message'] = "Successfully edited!";
-		header("Location: ../index.php");
-	}
+	if ($editUser['status'] == '200') {
+        $_SESSION['message'] = $editUser['message'];
+        $_SESSION['status'] = $editUser['status'];
+        header("Location: ../index.php");
+    }
+
+    else {
+        $_SESSION['message'] = $editUser['message'];
+        $_SESSION['status'] = $editUser['status'];
+        header("Location: ../index.php");
+    }
 }
 
 if (isset($_POST['deleteUserBtn'])) {
