@@ -23,99 +23,87 @@ function getUserByID($pdo, $id) {
 		return $stmt->fetch();
 	}
 }
-
 function searchForAUser($pdo, $searchQuery) {
-	$sql = "SELECT * FROM search_users_data WHERE 
-			CONCAT(data_specialization,experience,first_name,last_name,email,gender,
-				nationality,date_added) 
-			LIKE ?";
-
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute(["%".$searchQuery."%"]);
-	if ($executeQuery) {
-		return $stmt->fetchAll();
-        
-	}
-
+    $sql = "SELECT * FROM search_users_data WHERE 
+            CONCAT(data_specialization, experience, first_name, last_name, email, gender, nationality, date_added) 
+            LIKE ?";
+    $stmt = $pdo->prepare($sql);
+    $executeQuery = $stmt->execute(["%" . $searchQuery . "%"]);
+    
+    if ($executeQuery) {
+        return $stmt->fetchAll();
+    } else {
+        return array(
+            "status" => "400",
+            "message" => "An error occurred with the query!"
+        );
+    }
 }
 
 
 
-function insertNewUser($pdo,$data_specialization, $experience, $first_name, $last_name, $email, 
-	$gender, $nationality) {
+
+function insertNewUser($pdo, $data_specialization, $experience, $first_name, $last_name, $email, $gender, $nationality) {
     $response = array();
-    $checkIfUserExists = checkIfUserExists($pdo, $first_name);
+    $checkIfUserExists = checkIfUserExists($pdo, $email); // Use email instead of first_name
+
     if (!$checkIfUserExists['result']) {
         $sql = "INSERT INTO search_users_data 
-			(
-                data_specialization,
-                experience,
-				first_name,
-				last_name,
-				email,
-				gender,
-				nationality
-			)
-			VALUES (?,?,?,?,?,?,?)
-			";
-
-	$stmt = $pdo->prepare($sql);
-    if ($stmt->execute([
-		$data_specialization, $experience,
-        $first_name, $last_name, $email, 
-		$gender,$nationality,])){
+                (data_specialization, experience, first_name, last_name, email, gender, nationality)
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $pdo->prepare($sql);
+        
+        if ($stmt->execute([$data_specialization, $experience, $first_name, $last_name, $email, $gender, $nationality])) {
             $response = array(
-				"status" => "200",
-				"message" => "User successfully inserted!"
-			);
-		}
+                "status" => "200",
+                "message" => "User successfully inserted!"
+            );
+        } else {
+            $response = array(
+                "status" => "400",
+                "message" => "An error occurred with the query!"
+            );
+        }
+    } else {
+        $response = array(
+            "status" => "400",
+            "message" => "User already exists!"
+        );
+    }
 
-		else {
-			$response = array(
-				"status" => "400",
-				"message" => "An error occured with the query!"
-			);
-		}
-	}
-
-	else {
-		$response = array(
-			"status" => "400",
-			"message" => "User already exists!"
-		);
-	}
-
-	return $response;
-
-	
+    return $response;
 }
 
-function editUser($pdo,$data_specialization, $experience, $first_name, $last_name, $email, $gender, 
-	 $nationality, $id) {
 
-	$sql = "UPDATE search_users_data
-				SET data_specialization = ?, 
-                    experience = ?,
-                    first_name = ?,
-					last_name = ?,
-					email = ?,
-					gender = ?,
-					nationality = ?
-				WHERE id = ? 
-			";
+function editUser($pdo, $data_specialization, $experience, $first_name, $last_name, $email, $gender, $nationality, $id) {
+    $response = array();
+    $sql = "UPDATE search_users_data
+            SET data_specialization = ?, experience = ?, first_name = ?, last_name = ?, email = ?, gender = ?, nationality = ?
+            WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    $executeQuery = $stmt->execute([$data_specialization, $experience, $first_name, $last_name, $email, $gender, $nationality, $id]);
 
-	$stmt = $pdo->prepare($sql);
-	$executeQuery = $stmt->execute([$data_specialization, $experience,$first_name, $last_name, $email, $gender, 
-		 $nationality, $id]);
+    if ($executeQuery) {
+        $response = array(
+            "status" => "200",
+            "message" => "User successfully updated!"
+        );
+    } else {
+        $response = array(
+            "status" => "400",
+            "message" => "An error occurred with the query!"
+        );
+    }
 
-	if ($executeQuery) {
-		return true;
-	}
-
+    return $response;
 }
+
+
+
 
 
 function deleteUser($pdo, $id) {
+	
 	$sql = "DELETE FROM search_users_data 
 			WHERE id = ?";
 	$stmt = $pdo->prepare($sql);
